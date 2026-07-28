@@ -219,6 +219,10 @@ pub(crate) fn default_dir(scan: &RepoScan, language: Language, path: &Path) -> b
                     || text == "src"
                     || text.ends_with("/src")),
         Language::Markdown => text == "docs" || text == ".",
+        Language::Go =>
+            text == "src"
+                || text.ends_with("/src")
+                || directly_contains_source(scan, language, path),
     }
 }
 
