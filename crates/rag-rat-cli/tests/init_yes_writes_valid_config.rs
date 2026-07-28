@@ -289,3 +289,80 @@ fn init_refuses_to_run_in_a_linked_worktree() {
     );
     assert!(!linked.join("rag-rat.toml").exists(), "no branch-local config was written");
 }
+
+/// Go module-root coverage, non-interactive (`complete-default-bindings-coverage` task 10,
+/// BIND-01/BIND-02): a real on-disk fixture with a root `go.mod`, no root-level `.go` file, and
+/// more than 32 leaf `pkgN/file.go` packages must, through the ACTUAL `init --yes` CLI path (not
+/// just the unit-level `default_plan`), collapse to a single Go target bound at the module root
+/// (`.`) rather than emitting 40 individual per-package bindings.
+#[test]
+fn init_yes_binds_a_large_go_module_at_its_root() {
+    let root = unique_temp_root();
+    let cache = root.join("model-cache");
+    let data_dir = root.join("data");
+    std::fs::create_dir_all(&cache).unwrap();
+
+    // Root go.mod, no root-level .go file, >32 package dirs: module root must absorb every leaf
+    // package via manifest-root promotion + dedup_ancestors (BIND-01), mirroring the unit-level
+    // fixture in `init/scan.rs::go_module_root_absorbs_more_than_32_leaf_packages`.
+    std::fs::write(root.join("go.mod"), "module example.com/big\n\ngo 1.22\n").unwrap();
+    for i in 0..40 {
+        let dir = root.join(format!("pkg{i}"));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("file.go"), "package pkg\n").unwrap();
+    }
+    git_init(&root);
+
+    let output = Command::new(env!("CARGO_BIN_EXE_rag-rat"))
+        .args(["init", "--yes"])
+        .current_dir(&root)
+        .env("RAG_RAT_HOOK_DISABLE", "1")
+        .env("RAG_RAT_NO_WATCH", "1")
+        .env("RAG_RAT_MODEL_CACHE", &cache)
+        .env("RAG_RAT_DATA_DIR", &data_dir)
+        .env("HOME", &*root)
+        .env("XDG_CACHE_HOME", &cache)
+        .env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .env("GIT_CONFIG_SYSTEM", "/dev/null")
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
+        .env_remove("GIT_COMMON_DIR")
+        .env_remove("GIT_CONFIG")
+        .env_remove("GIT_CONFIG_PARAMETERS")
+        .env_remove("GIT_CONFIG_COUNT")
+        .output()
+        .expect("run rag-rat init --yes");
+
+    assert!(
+        output.status.success(),
+        "init --yes must succeed; stderr:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let config_path = root.join("rag-rat.toml");
+    assert!(config_path.exists(), "init --yes must write rag-rat.toml");
+
+    let written = std::fs::read_to_string(&config_path).unwrap();
+    assert!(
+        written.contains("go = [\".\"]"),
+        "the [target_bindings] table must bind go at the module root only, got:\n{written}"
+    );
+
+    let config = Config::load(&config_path).expect("Config::load must accept the written config");
+    let go_targets: Vec<_> = config
+        .targets
+        .iter()
+        .filter(|t| t.language == rag_rat_base::language::Language::Go)
+        .collect();
+    assert_eq!(
+        go_targets.len(),
+        1,
+        "a large Go module must collapse to a single target, got: {go_targets:?}"
+    );
+    assert_eq!(
+        go_targets[0].directories,
+        [std::path::PathBuf::from(".")],
+        "the sole Go target must bind at the module root, got: {go_targets:?}"
+    );
+}
