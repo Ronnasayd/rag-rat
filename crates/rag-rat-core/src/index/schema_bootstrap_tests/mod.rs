@@ -983,6 +983,7 @@ mod papertrail_tests;
 mod reconcile_embeddings;
 mod repo_memory;
 mod repo_registry;
+mod go_corpus;
 mod schema_migrations;
 mod swift_corpus;
 mod symbol_search_lookup;
