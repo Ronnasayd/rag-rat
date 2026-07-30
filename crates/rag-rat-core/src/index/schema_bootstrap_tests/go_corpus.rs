@@ -14,8 +14,8 @@
 //! 1. **What the tree-sitter baseline gets right**: symbols and their kinds, the import edge, and
 //!    the cross-file call that binds to a uniquely-named target.
 //! 2. **What it honestly CANNOT know** — the method call it must leave unresolved rather than
-//!    guess. A test that only asserted (1) would let a resolver that CONFIDENTLY GUESSES look
-//!    like an improvement.
+//!    guess. A test that only asserted (1) would let a resolver that CONFIDENTLY GUESSES look like
+//!    an improvement.
 
 use super::*;
 
@@ -236,11 +236,8 @@ fn go_corpus_builds_with_the_go_toolchain() {
     // `go vet` rather than plain `go build`: it compiles every package AND rejects the suspicious
     // constructs that still compile, so a corpus edit that quietly breaks the fixture's meaning
     // is caught as well as one that breaks its syntax.
-    let build = Command::new("go")
-        .args(["vet", "./..."])
-        .current_dir(&root)
-        .output()
-        .expect("run go vet");
+    let build =
+        Command::new("go").args(["vet", "./..."]).current_dir(&root).output().expect("run go vet");
     assert!(
         build.status.success(),
         "the corpus must build with the Go toolchain:\n--- stdout ---\n{}\n--- stderr ---\n{}",

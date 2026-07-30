@@ -50,14 +50,7 @@ fn go_import_edges(text: &str, node: Node<'_>, path: &Path, out: &mut EdgeEmitte
     let Some(package) = go_import_path(node, text) else {
         return;
     };
-    out.push(file_edge(
-        path,
-        node,
-        text,
-        package,
-        EdgeKind::Imports,
-        EdgeConfidence::NameOnly,
-    ));
+    out.push(file_edge(path, node, text, package, EdgeKind::Imports, EdgeConfidence::NameOnly));
 }
 
 /// The unquoted import path of an `import_spec`.

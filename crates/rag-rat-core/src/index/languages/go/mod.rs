@@ -268,13 +268,10 @@ mod tests {
         let found = symbols(source);
 
         // Assert
-        assert_eq!(
-            found,
-            vec![
-                ("method", "Server.Close".to_string()),
-                ("method", "Client.Close".to_string()),
-            ]
-        );
+        assert_eq!(found, vec![
+            ("method", "Server.Close".to_string()),
+            ("method", "Client.Close".to_string()),
+        ]);
     }
 
     /// A generic receiver wraps the type in `generic_type` on top of `pointer_type`; both wrappers
@@ -314,10 +311,7 @@ mod tests {
         let found = symbols(source);
 
         // Assert
-        assert_eq!(
-            found,
-            vec![("type", "Celsius".to_string()), ("type", "Alias".to_string())]
-        );
+        assert_eq!(found, vec![("type", "Celsius".to_string()), ("type", "Alias".to_string())]);
     }
 
     /// `const_spec` / `var_spec` mark their `name` field `multiple` in the grammar; a
@@ -335,15 +329,12 @@ mod tests {
         let found = symbols(source);
 
         // Assert
-        assert_eq!(
-            found,
-            vec![
-                ("const", "Ready".to_string()),
-                ("const", "Done".to_string()),
-                ("var", "x".to_string()),
-                ("var", "y".to_string()),
-            ]
-        );
+        assert_eq!(found, vec![
+            ("const", "Ready".to_string()),
+            ("const", "Done".to_string()),
+            ("var", "x".to_string()),
+            ("var", "y".to_string()),
+        ]);
     }
 
     #[test]

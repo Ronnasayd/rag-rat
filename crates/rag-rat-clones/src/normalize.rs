@@ -605,7 +605,8 @@ mod tests {
         assert!(!n1.is_empty(), "Go normalize stream must be non-empty");
         assert_eq!(
             n1, n2,
-            "Go string-content-only diff must normalize equal (interpreted_string_literal_content bucketed)"
+            "Go string-content-only diff must normalize equal (interpreted_string_literal_content \
+             bucketed)"
         );
         assert!(
             !n1.iter().any(|t| t == "hello" || t == "world" || t == "foo" || t == "bar"),

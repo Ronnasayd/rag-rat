@@ -356,8 +356,8 @@ impl WizardDraft {
     /// - Languages: those with a non-zero file count in `scan`.
     /// - Directories: delegates to the shared `scan::resolved_bindings` helper (also used by
     ///   `init::run::default_plan`), which wraps `default_dirs` — folding in manifest-root
-    ///   promotion (Go) and the "no safe default → omit Python / fall back to '.' for others"
-    ///   edge case — so both entry points resolve bindings identically (BIND-03).
+    ///   promotion (Go) and the "no safe default → omit Python / fall back to '.' for others" edge
+    ///   case — so both entry points resolve bindings identically (BIND-03).
     /// - Embedding backend: `recommend_backend` based on estimated chunk count.
     /// - Oracle: off (must be opted in explicitly).
     /// - Version check: on (the default).

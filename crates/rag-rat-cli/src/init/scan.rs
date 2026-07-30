@@ -70,8 +70,11 @@ pub(crate) fn scan_dir(
             // manifest root; content validity is irrelevant here.
             let parent = path.parent().unwrap_or(dir);
             let relative_parent = parent.strip_prefix(root).unwrap_or(parent);
-            let relative_parent =
-                if relative_parent.as_os_str().is_empty() { Path::new(".") } else { relative_parent };
+            let relative_parent = if relative_parent.as_os_str().is_empty() {
+                Path::new(".")
+            } else {
+                relative_parent
+            };
             scan.manifest_roots
                 .entry(Language::Go)
                 .or_default()
@@ -321,11 +324,8 @@ pub(crate) fn default_dirs(scan: &RepoScan, language: Language) -> Vec<PathBuf> 
     };
     // Step 1: every dir the per-language `default_dir` heuristic flags as a natural default —
     // uncapped depth, no top-32 truncation.
-    let mut defaults: Vec<PathBuf> = counts
-        .keys()
-        .filter(|path| default_dir(scan, language, path))
-        .cloned()
-        .collect();
+    let mut defaults: Vec<PathBuf> =
+        counts.keys().filter(|path| default_dir(scan, language, path)).cloned().collect();
     // Step 2: promote each recorded manifest root (currently Go's `go.mod` dirs) as an
     // additional default — module roots absorb their leaf-package defaults via the
     // `dedup_ancestors` pass below, so a Go repo with a root `go.mod` and no root-level
@@ -365,9 +365,8 @@ pub(crate) fn dedup_ancestors(mut paths: Vec<PathBuf>) -> Vec<PathBuf> {
         // `Path::starts_with` does NOT treat "." as an ancestor of a relative path (it compares
         // components literally, and "." has none once normalized) — so "." needs an explicit
         // check to act as the universal root every other relative path descends from.
-        let has_kept_ancestor = kept
-            .iter()
-            .any(|ancestor| ancestor == Path::new(".") || path.starts_with(ancestor));
+        let has_kept_ancestor =
+            kept.iter().any(|ancestor| ancestor == Path::new(".") || path.starts_with(ancestor));
         if !has_kept_ancestor {
             kept.push(path);
         }
@@ -663,10 +662,11 @@ mod dedup_ancestors_tests {
     #[test]
     fn unrelated_paths_are_kept_unchanged() {
         let paths = vec![PathBuf::from("pkg1"), PathBuf::from("pkg2"), PathBuf::from("pkg3")];
-        assert_eq!(
-            dedup_ancestors(paths.clone()),
-            vec![PathBuf::from("pkg1"), PathBuf::from("pkg2"), PathBuf::from("pkg3")]
-        );
+        assert_eq!(dedup_ancestors(paths.clone()), vec![
+            PathBuf::from("pkg1"),
+            PathBuf::from("pkg2"),
+            PathBuf::from("pkg3")
+        ]);
     }
 
     #[test]
@@ -729,11 +729,8 @@ mod default_dirs_tests {
         // fallback must promote nothing rather than write a binding into installed deps.
         let root = tempfile::tempdir().unwrap();
         fs::create_dir_all(root.path().join(".venv/lib/site-packages/pkg")).unwrap();
-        fs::write(
-            root.path().join(".venv/lib/site-packages/pkg/mod.py"),
-            "def f():\n    pass\n",
-        )
-        .unwrap();
+        fs::write(root.path().join(".venv/lib/site-packages/pkg/mod.py"), "def f():\n    pass\n")
+            .unwrap();
 
         let scan = scan_repo(root.path()).unwrap();
         assert_eq!(default_dirs(&scan, Language::Python), Vec::<PathBuf>::new());
@@ -816,10 +813,10 @@ mod default_dirs_tests {
         }
 
         let scan = scan_repo(root.path()).unwrap();
-        assert_eq!(
-            default_dirs(&scan, Language::Go),
-            vec![PathBuf::from("svc-a"), PathBuf::from("svc-b")]
-        );
+        assert_eq!(default_dirs(&scan, Language::Go), vec![
+            PathBuf::from("svc-a"),
+            PathBuf::from("svc-b")
+        ]);
     }
 
     #[test]
